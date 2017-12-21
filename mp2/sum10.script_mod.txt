@@ -1,0 +1,131 @@
+/*** Modified by Ron Cheung 3/2016 for Virtual SAPC environment***/
+/*** Workaround for the GDB bug in vserver VM ***/
+/*** To set break point in assembly, use b *addr  ***/
+/*** see http://www.csee.umbc.edu/~cpatel2/links/310/nasm/gdb_help.shtml ***/
+
+In one window:  mtip -f sum10.lnx
+~d           <---download program
+Tutor>gdb    <--special gdb command to switch control over to gdb
+             <--leave this "hanging"--we'll start it from remote gdb
+-------------------------------------------------------------------------
+In another window (or another C shell job if you don't have
+  multiple windows):
+
+tuor-vserver$ gdb sum10.lnx
+GNU gdb (GDB) 7.0.1-debian
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i486-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /home/tuser/cs341/mp2/part1/sum10.lnx...done.
+(gdb) tar rem /dev/ttyS0         <-- short for target remote
+                                (for mtip using COM1)
+Remote debugging using /dev/ttyS0
+0x100100 in ??()
+(gdb) b main                      <--set breakpoint in C
+Breakpoint 1 at 0x100148: file sum10c.c, line 5.
+(gdb) c
+Continuing.
+
+Breakpoint 1, main () at sum10c.c:5
+5	  printf("sum of 10 ints is %d\n",sum10());
+(gdb) b *sum10                    <---set breakpoint in assembler
+Breakpoint 2 at 0x100160: file sum10c.c, line 6.
+(gdb) c
+Continuing.
+
+Breakpoint 2, 0x100160 in sum10.opc () at sum10c.c:6
+6	}
+(gdb) where
+#0  0x100160 in sum10.opc () at sum10c.c:6
+#1  0x100122 in startupc () at startup.c:7
+(gdb) p $pc                        (or $eip)
+$1 = (void *) 0x100160
+(gdb) p $sp
+$2 = (void *) 0x3fffdc
+(gdb) i reg
+eax            0x69444	431172
+ecx            0x0	0
+edx            0x101e10	1056272
+ebx            0x70a70	461424
+esp            0x3fffdc	0x3fffdc
+ebp            0x3fffe0	0x3fffe0
+esi            0x70a70	461424
+edi            0x100fb0	1052592
+eip            0x100160	0x100160
+ps             0x212	530    <---EFLAGS is called ps
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) x/i $pc                    <---look at current instruction
+0x100160 <sum10.opc>:	movl   $0x1,%ecx
+(gdb) x/10i $pc                  <---look at 10 instructions
+0x100160 <sum10.opc>:	movl   $0x1,%ecx
+0x100165 <sum10.opc+5>:	movl   $0x0,%eax
+0x10016a <addint>:	addl   %ecx,%eax
+0x10016c <addint+2>:	incl   %ecx
+0x10016d <addint+3>:	cmpl   $0xa,%ecx
+0x100170 <addint+6>:	jbe    0x10016a <addint>
+0x100172 <addint+8>:	ret
+0x100173 <addint+9>:	nop
+0x100174 <support.opc>:	int3
+0x100175 <support.opc+1>:	ret
+(gdb) si                          <--step one instruction
+0x100165	6	}
+                               (you can set a breakpoint at an address
+                                with (gdb) b *0x10016a      for example)
+(gdb) x/i $pc                     <--look at new spot
+0x100165 <sum10.opc+5>:	movl   $0x0,%eax
+(gdb) i reg
+eax            0x69444	431172
+ecx            0x1	1      <--- see 1 in ecx now
+edx            0x101e10	1056272
+ebx            0x70a70	461424
+esp            0x3fffdc	0x3fffdc
+ebp            0x3fffe0	0x3fffe0
+esi            0x70a70	461424
+edi            0x100fb0	1052592
+eip            0x100165	0x100165
+ps             0x312	786
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c                       <---continue
+Continuing.
+sum of 10 ints is 55         <---see printf output of program
+
+Program received signal SIGTRAP, Trace/breakpoint trap.  <--hit int $3
+startupc () at startup.c:4
+startup.c:4: No such file or directory.
+(gdb) set $eip = 0x100100   <-- to rerun, set EIP back to 100100
+(gdb) c                      <-- and continue
+Continuing.
+
+Breakpoint 1, main () at sum10c.c:5   <--hits breakpoint at main again
+5	  printf("sum of 10 ints is %d\n",sum10());
+(gdb) c
+Continuing.
+b main
+Breakpoint 2, 0x100160 in sum10.opc () at sum10c.c:6  <-- and other one
+6	}
+(gdb) c
+Continuing.
+sum of 10 ints is 55
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+startupc () at startup.c:4
+startup.c:4: No such file or directory.
+(gdb) quit
+The program is running.  Quit anyway (and kill it)? (y or n) y
+ulab(2)% exit
+exit

@@ -1,0 +1,59 @@
+Anwesh Joshi
+mp1
+discussion.txt
+
+1. On SAPC:
+  PC-tutor> md 100730
+  00100730 55 89 e5 83 ec 04 56 53 8b 5d 0c 88 5d ff 83 7d U.....VS.]..]..}
+
+   On UNIX: //(As expected)
+   UNIX-tutor> md 12
+   Segmentation fault (core dumped)
+
+2. With unexacting address, I get segmentation fault on UNIX whereas TUTOR gives me an error and throws me out of the loop i.e.EIP=00100b46: Page fault.
+
+3. a) For address of xyz,
+
+      PC-tutor> md 101e34   
+      00101e34    06 00 00 00 34 1e 10 00 28 82 06 00 00 00 00 00 ....4...(.......
+
+    b) For address of pxyz,
+    
+      PC-tutor> md 101e38   
+      00101e34    34 1e 10 00 28 82 06 00 00 00 00 00 00 00 00 00 4...(...........
+
+      For value of pxyz,
+      Tutor> mdd 101e38
+      00101e38    00101e34 00068228 00000000 00000000 4...(...........
+
+--> The value of pxyz as we can see gives the address of xyz. 
+    Also, the memory address of pxyz and xyz is slightly different as pxyz points to xyz because of the way it is stored there i.e. little endian storage.
+
+     c) cods array begins with 101df8.
+      PC-tutor> md 101df8
+      00101df8   2c 04 10 00 64 04 10 00 12 04 10 00 0f 04 10 00   ,...d...........
+    
+      Increasing the address by 48 takes us the last row of the array.
+
+     d) Runs fine except the command when changed form ’s’ to ‘x’.
+
+
+4. On SAPC: 
+   Code resides from 100100 to 101df8. Data resides from 101e34 to 101fc4. 
+   On Unix:
+   nm command will classify the code into columns as index, value, size, type, bind, other, shandy, name.
+
+5. After changing the address of Tutor itself,
+   Unix: Segmentation fault
+   SAPC: command stops working (gives Exception 14 at EIP=00100435: Page Fault)
+
+6. On SAPC:
+   ESP = 003ffff0
+   On UNIX:
+   It did not let me see the registers even in gdb mode.
+
+7. I tired changing other codes as I was unsure what I was supposed to do at first. Similarly, I also got confused when I kept getting segmentation-fault error on UNIX system, which gave me info about what USYMS (map file) is what it does. 
+
+8. The project was definitely worth the time as it gave us some experience with what to except further in homework and also with the environment that we will be working with. 
+Further explanations on discussion part of the problems would be more helpful as being in early portion of C/ Assembly language, it's hard to understand what is expected of us in those questions.
+

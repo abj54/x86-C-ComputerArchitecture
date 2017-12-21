@@ -1,0 +1,23 @@
+Script started on Tue 12 Dec 2017 03:33:28 PM EST
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ mtip -l /dev/ttyS0
+For command help, type ~?
+For help on args, rerun without args
+Using board # -1 
+Prompt: 
+
+anwesh
+Prompt: 
+
+watch
+Prompt: 
+
+easy
+Prompt: 
+
+~q 
+Quit handler: 
+killing process 1953 Leaving board #-1
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ exit
+exit
+
+Script done on Tue 12 Dec 2017 03:34:14 PM EST

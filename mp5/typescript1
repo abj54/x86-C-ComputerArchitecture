@@ -1,0 +1,52 @@
+Script started on Tue 12 Dec 2017 03:47:43 PM EST
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ ~mtip -l /dev/ttyS0
+bash: ~mtip: command not found
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ ~mtip -l /dev/ttyS0[1P
+For command help, type ~?
+For help on args, rerun without args
+Using board # -1 
+Prompt: 
+
+now is time
+Prompt: 
+
+see me type
+Prompt: 
+
+data
+Prompt: 
+
+in
+Prompt: 
+
+more
+Prompt: 
+
+more
+Prompt: 
+
+Prompt: 
+
+again
+Prompt: 
+
+lets try
+Prompt: 
+
+more
+Prompt: 
+
+more
+Prompt: 
+
+spi
+Prompt: 
+
+~q 
+Quit handler: 
+killing process 2251 Leaving board #-1
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ 
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ exit
+exit
+
+Script done on Tue 12 Dec 2017 03:50:10 PM EST

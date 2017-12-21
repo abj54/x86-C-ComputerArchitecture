@@ -1,0 +1,113 @@
+Script started on Mon Oct 30 20:41:34 2017
+[?1034hbash-3.2$ 
+bash-3.2$ ssh tuser@172.16.121.128
+tuser@172.16.121.128's password: 
+Linux tutor-vserver 2.6.32-5-686 #1 SMP Fri Sep 9 20:51:05 UTC 2011 i686
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Mon Oct 30 20:36:12 2017 from 172.16.121.1
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ cd mp2
+]0;tuser@tutor-vserver: ~/mp2tuser@tutor-vserver:~/mp2$ gdb printbin.lnx
+GNU gdb (GDB) 7.0.1-debian
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i486-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /home/tuser/mp2/printbin.lnx...done.
+(gdb) tar rem /dev/ttyS0
+Remote debugging using /dev/ttyS0
+startupc () at startup.c:4
+4	startup.c: No such file or directory.
+	in startup.c
+(gdb) b *0x100218
+Breakpoint 1 at 0x100218: file printbinc.c, line 16.
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100218 in main () at printbinc.c:16
+16	}
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00000007 in ?? ()
+(gdb) i reg
+eax            0x0	0
+ecx            0x6967c	431740
+edx            0x100180	1048960
+ebx            0xb	11
+esp            0x3ffff0	0x3ffff0
+ebp            0x0	0x0
+esi            0x13e10	81424
+edi            0x101ab4	1055412
+eip            0x7	0x7
+eflags         0x10202	[ IF RF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00000007 in ?? ()
+(gdb) r
+The "remote" target does not support "run".  Try "help target" or "continue".
+(gdb) q
+A debugging session is active.
+
+	Inferior 1 [Remote target] will be killed.
+
+Quit anyway? (y or n) y
+]0;tuser@tutor-vserver: ~/mp2tuser@tutor-vserver:~/mp2$ logout
+Connection to 172.16.121.128 closed.
+bash-3.2$ exit
+exit
+
+Script done on Mon Oct 30 20:43:17 2017

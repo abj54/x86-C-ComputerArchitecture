@@ -1,0 +1,9 @@
+Anwesh Joshi
+discussion.txt
+
+After writing my code, I had a bunch of errors that I kept getting which I 
+debugged using various printf statements. Similarly I also got errors 
+when I didnot kick start the Transimtter Interrupt everytime. To test it,
+I used various conditions that included different statements of different 
+lengths. Similarly, I also checked how my buffer would react in different
+situations by printing it in various cases.

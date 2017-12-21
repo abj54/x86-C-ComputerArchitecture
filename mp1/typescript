@@ -1,0 +1,791 @@
+Script started on Mon 02 Oct 2017 07:49:32 PM EDT
+tuser@tutor-vserver:~/mp1$ ssh janwesh@users.cs.umb.edu
+janwesh@users.cs.umb.edu's password: 
+Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.4.0-96-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+0 packages can be updated.
+0 updates are security updates.
+
+
+You have new mail.
+Last login: Mon Oct  2 19:46:38 2017 from 73.219.2.116
+janwesh@itserver6:~$ cd cs341/mp1
+janwesh@itserver6:~/cs341/mp1$ ls -al
+total 300
+drwxr-sr-x 2 janwesh cs341-1G  4096 Oct  2 19:48 .
+drwxrws--- 4 janwesh cs341-1G  4096 Oct  2 19:42 ..
+-rw-r--r-- 1 janwesh cs341-1G  3845 Oct  1 18:49 cmds.c
+-rw-r--r-- 1 janwesh cs341-1G  6224 Oct  2 19:47 cmds.o
+-rw-r--r-- 1 janwesh cs341-1G  1372 Oct  2 19:47 cmds.opc
+-rw------- 1 janwesh cs341-1G 88592 Oct  2 19:48 core
+-rw-r--r-- 1 janwesh cs341-1G  2392 Oct  1 19:08 discussion.txt
+-rw-r--r-- 1 janwesh cs341-1G  2772 Sep 20 16:06 makefile
+-rw-r--r-- 1 janwesh cs341-1G 51200 Sep 20 16:06 mp1.doc
+-rw-r--r-- 1 janwesh cs341-1G 12533 Sep 20 16:06 Rubric.docx
+-rw-r--r-- 1 janwesh cs341-1G  2392 Sep 20 16:06 slex.c
+-rw-r--r-- 1 janwesh cs341-1G  1846 Sep 20 16:06 slex.h
+-rw-r--r-- 1 janwesh cs341-1G  3852 Oct  2 19:47 slex.o
+-rw-r--r-- 1 janwesh cs341-1G   473 Oct  2 19:47 slex.opc
+-rw-r--r-- 1 janwesh cs341-1G  2242 Oct  2 19:47 syms
+-rwxr-xr-x 1 janwesh cs341-1G 14372 Oct  2 19:47 tutor
+-rw-r--r-- 1 janwesh cs341-1G  2210 Sep 20 16:06 tutor.c
+-rwxr-xr-x 1 janwesh cs341-1G 29582 Oct  2 19:47 tutor.lnx
+-rw-r--r-- 1 janwesh cs341-1G  4080 Oct  2 19:47 tutor.o
+-rw-r--r-- 1 janwesh cs341-1G   725 Oct  2 19:47 tutor.opc
+-rw-r--r-- 1 janwesh cs341-1G 27131 Oct  1 19:28 typescript
+-rw-r--r-- 1 janwesh cs341-1G  2031 Oct  2 19:47 usyms
+janwesh@itserver6:~/cs341/mp1$ cat discussion.txt
+Anwesh Joshi
+mp1
+discussion.txt
+
+1. On SAPC:
+  PC-tutor> md 100730
+  00100730 55 89 e5 83 ec 04 56 53 8b 5d 0c 88 5d ff 83 7d U.....VS.]..]..}
+
+   On UNIX: //(As expected)
+   UNIX-tutor> md 12
+   Segmentation fault (core dumped)
+
+2. With unexacting address, I get segmentation fault on UNIX whereas TUTOR gives me an error and throws me out of the loop i.e.EIP=00100b46: Page fault.
+
+3. a) For address of xyz,
+
+      PC-tutor> md 101e34   
+      00101e34    06 00 00 00 34 1e 10 00 28 82 06 00 00 00 00 00 ....4...(.......
+
+    b) For address of pxyz,
+    
+      PC-tutor> md 101e38   
+      00101e34    34 1e 10 00 28 82 06 00 00 00 00 00 00 00 00 00 4...(...........
+
+      For value of pxyz,
+      Tutor> mdd 101e38
+      00101e38    00101e34 00068228 00000000 00000000 4...(...........
+
+--> The value of pxyz as we can see gives the address of xyz. 
+    Also, the memory address of pxyz and xyz is slightly different as pxyz points to xyz because of the way it is stored there i.e. little endian storage.
+
+     c) cods array begins with 101df8.
+      PC-tutor> md 101df8
+      00101df8   2c 04 10 00 64 04 10 00 12 04 10 00 0f 04 10 00   ,...d...........
+    
+      Increasing the address by 48 takes us the last row of the array.
+
+     d) Runs fine except the command when changed form ’s’ to ‘x’.
+
+
+4. On SAPC: 
+   Code resides from 100100 to 101df8. Data resides from 101e34 to 101fc4. 
+   On Unix:
+   nm command will classify the code into columns as index, value, size, type, bind, other, shandy, name.
+
+5. After changing the address of Tutor itself,
+   Unix: Segmentation fault
+   SAPC: command stops working (gives Exception 14 at EIP=00100435: Page Fault)
+
+6. On SAPC:
+   ESP = 003ffff0
+   On UNIX:
+   It did not let me see the registers even in gdb mode.
+
+7. I tired changing other codes as I was unsure what I was supposed to do at first. Similarly, I also got confused when I kept getting segmentation-fault error on UNIX system, which gave me info about what USYMS (map file) is what it does. 
+
+8. The project was definitely worth the time as it gave us some experience with what to except further in homework and also with the environment that we will be working with. 
+Further explanations on discussion part of the problems would be more helpful as being in early portion of C/ Assembly language, it's hard to understand what is expected of us in those questions.
+
+janwesh@itserver6:~/cs341/mp1$ cat cmds.c
+
+
+/*  Modified by: Anwesh Joshi
+    file: cmds.c
+    date: 10/01/2017
+*/
+
+/******************************************************************
+*
+*   file:     cmds.c
+*   author:   betty o'neil
+*   date:     ?
+*
+*   semantic actions for commands called by tutor (cs341, hw2)
+*
+*   revisions:
+*      9/90  eb   cleanup, convert function declarations to ansi
+*      9/91  eb   changes so that this can be used for hw1
+*      9/02  re   minor changes to quit command
+*/
+/* the Makefile arranges that #include <..> searches in the right
+   places for these headers-- 200920*/
+
+#include <stdio.h>
+#include "slex.h"
+
+/*===================================================================*
+*
+*   Command table for tutor program -- an array of structures of type
+*   cmd -- for each command provide the token, the function to call when
+*   that token is found, and the help message.
+*
+*   slex.h contains the typdef for struct cmd, and declares the
+*   cmds array as extern to all the other parts of the program.
+*   Code in slex.c parses user input command line and calls the
+*   requested semantic action, passing a pointer to the cmd struct
+*   and any arguments the user may have entered.
+*
+*===================================================================*/
+
+PROTOTYPE int stop(Cmd *cp, char *arguments);
+PROTOTYPE int mem_display(Cmd *cp, char *arguments);
+PROTOTYPE int mem_set(Cmd *cp, char *arguments);
+PROTOTYPE int help(Cmd *cp, char *arguments);
+/* command table */
+
+Cmd cmds[] = {{"md",  mem_display, "Memory display: MD <addr>"},
+              {"ms",  mem_set,     "Memory set:MS <addr> <value>"},
+              {"h",   help,        "Help:H <command>"},
+              {"s",   stop,        "Stop" },
+              {NULL,  NULL,         NULL}};  /* null cmd to flag end of table */
+
+char xyz = 6;  /* test global variable  */
+char *pxyz = &xyz;  /* test pointer to xyz */
+/*===================================================================*
+*		command			routines
+*
+*   Each command routine is called with 2 args, the remaining
+*   part of the line to parse and a pointer to the struct cmd for this
+*   command. Each returns 0 for continue or 1 for all-done.
+*
+*===================================================================*/
+
+int stop(Cmd *cp, char *arguments)
+{
+  return 1;			/* all done flag */
+}
+
+/*===================================================================*
+*
+*   mem_display: display contents of 16 bytes in hex
+*
+*/
+
+int mem_display(Cmd *cp, char *arguments)
+{
+//	printf("%d",arguments);
+	unsigned int i,add;
+  	unsigned char *addptr;
+	if (sscanf(arguments,"%x",&add)==1) {
+        	printf("%08x ",add); 
+//		unsigned char* addptr;
+		addptr = (char *) add;				
+		for (i =0; i<16;i++) {
+//			addptr = (char *) add;
+			printf("%02x ",*(addptr+i));
+		}	
+		for (i=0;i<16;i++) {
+			printf("%c",
+			(*(addptr + i) >= 0x20 &&
+	 		*(addptr + i) <= 0x7e) ?
+	 		*(addptr + i) : '.');
+		}
+    		printf("\n"); 
+   	} 
+        else {
+        	printf("help message: %s\n", cp->help);
+	}
+	
+ 
+  // printf("Reached mem_display, passed argument string: |%s|\n", arguments);
+//  printf("        help message: %s\n", cp->help);
+//	free(addptr); 
+ 	return 0;			 //not done 
+}
+
+int help(Cmd *cp, char *arguments ) {
+printf("     cmd    help message\n");
+
+  while(*arguments == ' ')
+     	arguments++;
+  for(cp = cmds; cp->cmdtoken; cp++)
+     if (!strcmp(arguments, cp->cmdtoken)) {
+	printf("%8s    %s\n", cp->cmdtoken, cp->help);
+	return 0;
+     }
+  for(cp = cmds; cp->cmdtoken; cp++)
+     printf("%8s    %s\n", cp->cmdtoken, cp->help);
+      	
+   	return 0;
+}
+
+int mem_set(Cmd *cp, char *arguments) {
+  	unsigned int add, newadd;
+	unsigned char *addptr;
+	if (sscanf(arguments,"%x%x",&add,&newadd) ==2) {
+		addptr = (char *)add;
+		*addptr = newadd;
+	
+  	printf("DONE\n");
+	} 
+	else {
+		printf("help:%s\n",cp->help);
+	}
+    return 0;
+}
+
+
+
+
+janwesh@itserver6:~/cs341/mp1$ cat tutor.c
+/******************************************************************
+*
+*   file:     tutor.c
+*   author:   eb
+*   date:     September, 1990
+*
+*   Driver for a "tutor" program to mimic and extend the MECB ROM TUTOR.
+* 
+*   built from betty o'neil's previous version
+*
+*   revisions:
+*   Jan '96: changed prompt to PC-tutor, now mimics floppy-based Tutor
+*/
+
+#include <stdio.h>
+#include "slex.h" 
+/* The preprocessor symbol SAPC is #defined in $pcinc/stdio.h.  This
+ * stdio.h is found by i386-gcc because of the -I flag in its compile command
+ * in the Makefile.  In the UNIX case, there is no such redirection,
+ * so the ordinary stdio.h is used, and it has no SAPC definition.
+ */
+#ifdef SAPC
+#define PROMPT "PC-tutor> "
+#else
+#define PROMPT "UNIX-tutor> "
+#endif
+int main(void);
+
+int main()
+{
+  int done = 0;
+  int cnum,linepos;
+  char linebuf[LINELEN];
+  Cmd *cp;
+
+  printf("     cmd    help message\n");
+  for(cp = cmds; cp->cmdtoken; cp++) 
+      printf("%8s    %s\n", cp->cmdtoken, cp->help);
+
+  while (!done) {
+    /* get cmd token from user by parsing first part of line in linebuf-- */
+    getcmd(linebuf,&cnum,&linepos);
+    /* call implementation routine for matched cmd-- */
+    /* (remaining part of line to parse starts at linebuf+linepos) */
+    done = cmds[cnum].cmdfn(&cmds[cnum], linebuf+linepos); 
+  }
+  return 0;
+}
+
+/***********************************************************************
+*
+*  getcmd 
+*
+* Better than scanf--read whole line in, parse resulting string.
+* Uses slex package to match cmd token in first part of linebuf 
+* and return command # and where to continue parsing.
+* Getcmd loops until user provides proper command, so no error return.
+*/
+void getcmd(char *linebuf, 
+             int *cnum_ptr,   /* returned command number */
+             int *pos_ptr     /* position in linebuf (after cmd token) */
+           )
+{
+  int done = 0;
+
+  while (!done) {
+     printf( PROMPT );
+     gets(linebuf);		/* read line from user, null terminate */
+     /* match cmd token to get cnum--call slex package to do lookup-- */
+     if (slex( linebuf, cmds, cnum_ptr, pos_ptr)==0) 
+         done = 1;	/* success in matching cmd */
+     else
+         printf(" No such command\n");
+  }
+}
+janwesh@itserver6:~/cs341/mp1$ cat makefile
+# Makefile for building cs341 mp1 programs using the
+# Standalone 486 or Pentium IBM PC running in 32-bit protected mode,
+# or "SAPC" for short.  UNIX builds also, and "make clean"
+
+# system directories needed for compilers, libraries, header files--
+# assumes the environment variables SAPC_TOOLS and SAPC_GNUBIN
+# have been set up by the ulab module
+
+PC_LIB = $(SAPC_TOOLS)/lib
+PC_INC = $(SAPC_TOOLS)/include
+
+# for SAPC builds
+PC_CC   = $(SAPC_GNUBIN)/i386-gcc
+PC_CFLAGS = -Wall -Wno-implicit -Wshadow -I$(PC_INC) -I$(PROJ)
+PC_AS   = $(SAPC_GNUBIN)/i386-as
+PC_LD   = $(SAPC_GNUBIN)/i386-ld
+PC_NM   = $(SAPC_GNUBIN)/i386-nm
+
+# File suffixes:
+# .c	C source (often useful both for UNIX and SAPC)
+# .s 	assembly language source (gnu as for protected mode 486)
+# .o    relocatable machine code, initialized data, etc., for UNIX
+# .opc  relocatable machine code, initialized data, etc., for SAPC
+# .lnx  executable image (bits as in memory), for SA PC (Linux a.out format)
+# .syms text file of .exe's symbols and their values (the "symbol table")
+# .usyms text file of UNIX executable's symbols
+
+# where to find files
+# change this to your homework folder
+PROJ = $(HOME)/cs341/mp1
+
+PC_OBJS = $(PROJ)/tutor.opc $(PROJ)/slex.opc
+UNIX_OBJS = $(PROJ)/tutor.o $(PROJ)/slex.o
+
+
+# PC executable--tell ld to start code at 0x1000e0, load special startup
+# module, special PC C libraries--
+# Code has 0x20 byte header, so use "go 100100"
+
+tutor.lnx: cmds.opc $(PC_OBJS) \
+		$(PC_LIB)/startup0.opc $(PC_LIB)/startup.opc $(PC_LIB)/libc.a
+	$(PC_LD) -N -Ttext 1000e0 -o tutor.lnx \
+		$(PC_LIB)/startup0.opc $(PC_LIB)/startup.opc \
+		$(PC_OBJS) cmds.opc $(PC_LIB)/libc.a
+	rm -f syms;$(PC_NM) -n tutor.lnx>syms
+
+# this rule allows you to build your own cmds.opc--
+cmds.opc: cmds.c $(PROJ)/slex.h
+	$(PC_CC) $(PC_CFLAGS) -c -o cmds.opc cmds.c
+
+# these should already have been made for you--
+$(PROJ)/tutor.opc: $(PROJ)/tutor.c $(PROJ)/slex.h
+	$(PC_CC) $(PC_CFLAGS) -c -o $(PROJ)/tutor.opc $(PROJ)/tutor.c
+
+$(PROJ)/slex.opc: $(PROJ)/slex.c $(PROJ)/slex.h
+	$(PC_CC) $(PC_CFLAGS) -c -o $(PROJ)/slex.opc $(PROJ)/slex.c
+
+# ************** UNIX build **********
+# tell make to use gcc as C compiler, -g -W... for C compiler flags--
+# check "man gcc" to find out what -W flags do
+CC = gcc
+CFLAGS = -Wall -Wno-implicit -Wshadow -g -I$(PROJ)
+
+tutor:  $(UNIX_OBJS) cmds.o
+	$(CC) -g -o tutor $(UNIX_OBJS) cmds.o
+	rm -f usyms; nm -vpt x tutor > usyms
+
+# make knows to use $(CC) and $(CFLAGS)
+cmds.o:	cmds.c  $(PROJ)/slex.h
+$(PROJ)/tutor.o: $(PROJ)/tutor.c $(PROJ)/slex.h
+$(PROJ)/slex.o: $(PROJ)/slex.c  $(PROJ)/slex.h
+# **************end of UNIX build ********
+
+clean:
+	rm -f *.o *.opc *.syms *.usyms *.lnx tutor core syms usyms
+
+janwesh@itserver6:~/cs341/mp1$ cat slex.c
+/******************************************************************
+*
+*   file:   slex.c
+*   author: betty o'neil
+*   date:   ?
+*
+*   simple lexical analyzer, front part of a parser                   
+*   --compare to UNIX tool "lex", general lexical analyzer            
+*   gets a (space-delimited) token from linebuf and tries to match    
+*   it to one of the cmdtokens in the provided cmdtable             
+*
+*   accepts:       
+*         linebuf--string to get token from                         
+*         cmdtable--cmdtable to use                                 
+*   returns:                                                          
+*         *cnum_ptr--command # (offset in cmdtable) or -1 if no match
+*         *pos_ptr--new place in linebuf after token match          
+*
+*   improvements needed:
+*         make token matching case independent
+*         skip whitespace, not just blanks
+*
+*   revisions: 
+*     9/90 cleanup, convert function headers to ansi form
+*
+*/
+
+#include <stdio.h>
+#include <string.h>
+#include "slex.h"		/* for definition of type cmd */
+
+int slex(char *linebuf,    /* string from user */
+         Cmd cmdtable[],   /* cmd table to use */
+         int *cnum_ptr,    /* returned command number */
+         int *pos_ptr)      /* returned new place in linebuf */
+{
+  int i = 0;
+  char token[MAXTOKENLEN];
+  int newpos;
+
+  if (gettoken(linebuf,token,&newpos)<0) /* get token from linebuf */
+    return -1;			/* couldn't find token */
+
+  while ((cmdtable[i].cmdtoken != NULL)) {
+    if (strcmp(cmdtable[i].cmdtoken,token)==0) {
+	*cnum_ptr = i;		/* success--return command # */
+	*pos_ptr = newpos;	/* and where we got to in linebuf */
+	return 0;
+    }
+    else
+      i++;			/* keep scanning table */
+  }
+  return -1;			/* no match */
+}
+
+/******************************************************************
+ * get one space-delimited token from string in linebuf, also return 
+ * new position in string 
+ */
+int gettoken(char *linebuf, char *token, int *pos_ptr)
+{
+  int i = 0;
+  int j = 0;
+
+  while (linebuf[i] == ' ')
+    i++;			/* skip blanks */
+  while (linebuf[i] != ' '&&linebuf[i]!='\0')
+    token[j++] = linebuf[i++];	/* copy chars to token */
+  if (j==0)
+    return -1;			/* nothing there */
+  else
+    {
+      token[j] = '\0';		/* null-terminate token */
+      *pos_ptr = i;		/* return place in linebuf we got to */
+      return 0;			/* success */
+    }
+}
+janwesh@itserver6:~/cs341/mp1$ ssh ulab
+janwesh@ulab's password: 
+Last login: Mon Oct  2 19:47:02 2017 from itserver6.cs.um
+Sun Microsystems Inc.   SunOS 5.8       Generic 64-bit  February 2000
+
+ Welcome to blade57.cs.umb.edu, a SunBlade 100 (uIIe-S128)
+
+                    Authorized users only.
+
+You have new mail.
+blade57(1)% cd cs341/mp1
+blade57(2)% ls
+Rubric.docx     core            slex.c          syms            tutor.o
+cmds.c          discussion.txt  slex.h          tutor           tutor.opc
+cmds.o          makefile        slex.o          tutor.c         typescript
+cmds.opc        mp1.doc         slex.opc        tutor.lnx       usyms
+blade57(3)% make clean
+rm -f *.o *.opc *.syms *.usyms *.lnx tutor core syms usyms
+blade57(4)% ls
+Rubric.docx     discussion.txt  mp1.doc         slex.h          typescript
+cmds.c          makefile        slex.c          tutor.c
+blade57(5)% make
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/janwesh/cs341/mp1 -c -o cmds.opc cmds.c
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/janwesh/cs341/mp1 -c -o /home/janwesh/cs341/mp1/tutor.opc /home/janwesh/cs341/mp1/tutor.c
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/janwesh/cs341/mp1 -c -o /home/janwesh/cs341/mp1/slex.opc /home/janwesh/cs341/mp1/slex.c
+/groups/ulab/bin/i386-ld -N -Ttext 1000e0 -o tutor.lnx \
+        /groups/ulab/pcdev/lib/startup0.opc /groups/ulab/pcdev/lib/startup.opc \
+        /home/janwesh/cs341/mp1/tutor.opc /home/janwesh/cs341/mp1/slex.opc cmds.opc /groups/ulab/pcdev/lib/libc.a
+rm -f syms;/groups/ulab/bin/i386-nm -n tutor.lnx>syms
+blade57(6)% make tutor
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/janwesh/cs341/mp1   -c -o /home/janwesh/cs341/mp1/tutor.o /home/janwesh/cs341/mp1/tutor.c
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/janwesh/cs341/mp1   -c -o /home/janwesh/cs341/mp1/slex.o /home/janwesh/cs341/mp1/slex.c
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/janwesh/cs341/mp1   -c -o cmds.o cmds.c
+gcc -g -o tutor /home/janwesh/cs341/mp1/tutor.o /home/janwesh/cs341/mp1/slex.o cmds.o
+rm -f usyms; nm -vpt x tutor > usyms
+blade57(7)% cat syms
+00100100 t /groups/ulab/pcdev/lib/startup0.opc
+00100110 t /groups/ulab/pcdev/lib/startup.opc
+00100110 t ___gnu_compiled_c
+00100110 T _startupc
+00100110 t gcc2_compiled.
+00100124 t /home/janwesh/cs341/mp1/tutor.opc
+00100124 t ___gnu_compiled_c
+00100124 t gcc2_compiled.
+0010014c T _main
+00100230 T _getcmd
+001002a0 t /home/janwesh/cs341/mp1/slex.opc
+001002a0 t ___gnu_compiled_c
+001002a0 T _slex
+001002a0 t gcc2_compiled.
+00100344 T _gettoken
+001003d8 t ___gnu_compiled_c
+001003d8 t cmds.opc
+001003d8 t gcc2_compiled.
+00100430 T _stop
+00100464 T _mem_display
+00100568 T _help
+00100630 T _mem_set
+00100690 T _breakpoint
+00100690 t support.opc
+00100692 T _clr_bss
+001006a4 t ___gnu_compiled_c
+001006a4 T _init_devio
+001006a4 t devio.opc
+001006a4 t gcc2_compiled.
+001006b4 T _init
+00100730 T _rawputc
+001007c8 t _delay
+001007f0 T _putc
+00100918 T _rawgetc
+001009a4 T _getc
+00100a0c T _readyc
+00100a98 T _devcontrol
+00100b2c T _devdescript
+00100bbc T _devname
+00100c40 t ___gnu_compiled_c
+00100c40 T ___main
+00100c40 t extra.opc
+00100c40 t gcc2_compiled.
+00100c48 t ___gnu_compiled_c
+00100c48 T _printf
+00100c48 t gcc2_compiled.
+00100c48 t printf.opc
+00100c70 t ___gnu_compiled_c
+00100c70 T _gets
+00100c70 t gcc2_compiled.
+00100c70 t gets.opc
+00100cc8 t ___gnu_compiled_c
+00100cc8 T _strcmp
+00100cc8 t gcc2_compiled.
+00100cc8 t strcmp.opc
+00100d08 t ___gnu_compiled_c
+00100d08 T _scanf
+00100d08 t gcc2_compiled.
+00100d08 t scanf.opc
+00100d40 T _fscanf
+00100d7c t _getch
+00100dc4 t _ungetch
+00100ddc T _sscanf
+00100e14 t _sgetch
+00100e48 t _sungetch
+00100e68 t ___gnu_compiled_c
+00100e68 t doprnt.opc
+00100e68 t gcc2_compiled.
+00100e98 T __doprnt
+00101698 t ___gnu_compiled_c
+00101698 T __doscan
+00101698 t doscan.opc
+00101698 t gcc2_compiled.
+00101970 t __innum
+00101c00 t __instr
+00101d48 t __getccl
+00101dd8 t ___gnu_compiled_c
+00101dd8 T _strlen
+00101dd8 t gcc2_compiled.
+00101dd8 t strlen.opc
+00101df8 t ___gnu_compiled_c
+00101df8 T __etext
+00101df8 D _cmds
+00101df8 T _etext
+00101df8 t ctype.opc
+00101df8 t gcc2_compiled.
+00101e34 D _xyz
+00101e38 D _pxyz
+00101e3c D _sysapi2
+00101e40 D __sctab
+00101ec0 D __ctype
+00101fc4 D __edata
+00101fc4 D _edata
+00101fc8 B __bss_start
+00101fc8 b _count
+00101fd0 B __ctmp
+00101fd4 B __end
+00101fd4 B _end
+blade57(8)% cat usyms
+
+
+tutor:
+0x00000000 f crtstuff.c
+0x00000000 f slex.c
+0x00000000 f tutor.c
+0x00000000 f crti.s
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 f cmds.c
+0x00000000 f tutor
+0x00000000 f crtstuff.c
+0x00000000 f values-Xa.c
+0x00000000 U __deregister_frame_info
+0x00000000 U __register_frame_info
+0x00000000 U _Jv_RegisterClasses
+0x00000000 f crtn.s
+0x00010000 d _START_
+0x000100d4 s 
+0x000100e8 s 
+0x00010210 s 
+0x00010440 s 
+0x0001059c s 
+0x000105bc s 
+0x000105e0 s 
+0x000105ec s 
+0x00010664 s 
+0x00010664 T _start
+0x000106e0 t __do_global_dtors_aux
+0x0001078c t call___do_global_dtors_aux
+0x00010798 t frame_dummy
+0x0001081c t call_frame_dummy
+0x00010828 T main
+0x00010944 T getcmd
+0x000109e0 T slex
+0x00010aec T gettoken
+0x00010c18 T stop
+0x00010c34 T mem_display
+0x00010dbc T help
+0x00010ef0 T mem_set
+0x00010f8c t __do_global_ctors_aux
+0x00010fd8 t call___do_global_ctors_aux
+0x00010fe4 s 
+0x00010fe4 T _init
+0x00011000 s 
+0x00011000 T _fini
+0x00011018 D _lib_version
+0x00011018 s 
+0x00011181 D _etext
+0x00021184 D _GLOBAL_OFFSET_TABLE_
+0x00021184 s 
+0x000211ac D _PROCEDURE_LINKAGE_TABLE_
+0x000211ac s 
+0x000211dc U atexit
+0x000211e8 U exit
+0x000211f4 U _exit
+0x00021224 U printf
+0x00021230 U gets
+0x0002123c U strcmp
+0x00021248 U sscanf
+0x00021258 D _DYNAMIC
+0x00021258 s 
+0x00021320 s 
+0x00021320 d force_to_data
+0x00021324 D __dso_handle
+0x00021328 D cmds
+0x00021364 D xyz
+0x00021368 D pxyz
+0x0002136c d force_to_data
+0x00021370 s 
+0x00021370 d __CTOR_LIST__
+0x00021374 d __CTOR_END__
+0x00021378 s 
+0x00021378 d __DTOR_LIST__
+0x0002137c d __DTOR_END__
+0x00021380 d __FRAME_END__
+0x00021380 s 
+0x00021380 d __EH_FRAME_BEGIN__
+0x00021384 s 
+0x00021384 d __JCR_LIST__
+0x00021384 d __JCR_END__
+0x00021388 s 
+0x00021388 d p.0
+0x0002138c b 
+0x0002138c b completed.1
+0x0002138c D _edata
+0x00021390 b object.2
+0x000213a8 B environ
+0x000213a8 B _environ
+0x000213ac B _end
+0x000213ac b _END_
+blade57(9)% tutor
+     cmd    help message
+      md    Memory display: MD <addr>
+      ms    Memory set:MS <addr> <value>
+       h    Help:H <command>
+       s    Stop
+UNIX-tutor> md 21364
+00021364 06 00 00 00 00 02 13 64 00 00 00 00 ff ff ff ff .......d........
+UNIX-tutor> md 21368
+00021368 00 02 13 64 00 00 00 00 ff ff ff ff 00 00 00 00 ...d............
+UNIX-tutor> md 21364 12
+00021364 06 00 00 00 00 02 13 64 00 00 00 00 ff ff ff ff .......d........
+UNIX-tutor> ms 21364 12
+DONE
+UNIX-tutor> h
+     cmd    help message
+      md    Memory display: MD <addr>
+      ms    Memory set:MS <addr> <value>
+       h    Help:H <command>
+       s    Stop
+UNIX-tutor> s
+blade57(10)% logout
+Connection to ulab closed.
+janwesh@itserver6:~/cs341/mp1$ logout
+Connection to users.cs.umb.edu closed.
+tuser@tutor-vserver:~/mp1$ scp janwesh@users.cs.umb.edu:cs341/mp1/tutor.* .
+janwesh@users.cs.umb.edu's password: 
+tutor.c                                         0%    0     0.0KB/s   --:-- ETAtutor.c                                       100% 2210     2.2KB/s   00:00    
+tutor.lnx                                       0%    0     0.0KB/s   --:-- ETAtutor.lnx                                     100%   29KB  28.9KB/s   00:00    
+tutor.o                                         0%    0     0.0KB/s   --:-- ETAtutor.o                                       100% 4080     4.0KB/s   00:00    
+tutor.opc                                       0%    0     0.0KB/s   --:-- ETAtutor.opc                                     100%  725     0.7KB/s   00:00    
+tuser@tutor-vserver:~/mp1$ ls
+tutor.c  [0m[01;32mtutor.lnx[0m  tutor.o  tutor.opc  typescript
+tuser@tutor-vserver:~/mp1$ mtip -f tutor.lnx
+For command help, type ~?
+For help on args, rerun without args
+Code starts at 0x100100
+Using board # 1 
+Please type <CR> to confirm console setting: 
+Setting console dev to COM2Console: colour EGA+ 80x25
+COM1 at 0x03f8 (irq = 4) is a 16550A
+COM2 at 0x02f8 (irq = 3) is a 16550A
+
+                 Welcome to UMB Tutor for the PC
+   UMB Tutor is a 32-bit protected-mode PC debugger/downloader,
+       based on Linux, UMB Tutor for m68k, and remote gdb.
+UMB Tutor is free software and you are welcome to distribute copies
+of it under certain conditions.  There is no warranty for this program.
+The copyright and warranty provisions follow the Gnu general public
+license, available for view in gdb and elsewhere.  Full sources available.
+--bugs, suggestions, questions to eoneil@cs.umb.edu
+
+Exception 3 at EIP=00057a9b: Breakpoint
+Tutor> ~downloading tutor.lnx
+
+........Done.
+
+Download done, setting EIP to 100100.
+Tutor> go 100100
+     cmd    help message
+      md    Memory display: MD <addr>
+      ms    Memory set:MS <addr> <value>
+       h    Help:H <command>
+       s    Stop
+PC-tutor> md 123
+00000123 f0 b6 0e 00 f0 b6 0e 00 f0 b6 0e 00 f0 b6 0e 00 ................
+PC-tutor> md 212
+00000212 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+PC-tutor> md 2130a
+0002130a fe ff ff 50 e8 c1 f9 ff ff 83 c4 10 e9 ee fb ff ...P............
+PC-tutor> ms 213 12
+DONE
+PC-tutor> s
+Exception 3 at EIP=00100110: Breakpoint
+Tutor> 
+Tutor> 
+Quit handler: 
+killing process 1888 Leaving board #1
+tuser@tutor-vserver:~/mp1$ exit
+exit
+
+Script done on Mon 02 Oct 2017 07:54:10 PM EDT

@@ -1,0 +1,401 @@
+Script started on Mon Oct 16 15:25:54 2017
+[?1034hbash-3.2$ ssh janwesh@users.cs.umb.edu
+janwesh@users.cs.umb.edu's password: 
+Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.4.0-96-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+99 packages can be updated.
+0 updates are security updates.
+
+
+You have new mail.
+Last login: Mon Oct 16 15:23:44 2017 from 158.121.249.23
+janwesh@itserver6:~$ cd cs341/mp2
+janwesh@itserver6:~/cs341/mp2$ ls -al
+total 236
+drwxrwsr-x 3 janwesh cs341-1G   4096 Oct 16 15:24 .
+drwxrws--- 5 janwesh cs341-1G   4096 Oct  3 22:53 ..
+-rw-r--r-- 1 janwesh cs341-1G    399 Oct 16 15:22 countc.c
+-rw-r--r-- 1 janwesh cs341-1G   1643 Oct 16 15:24 countc.opc
+-rwxr-xr-x 1 janwesh cs341-1G  26794 Oct 16 15:24 count.lnx
+-rw-r--r-- 1 janwesh cs341-1G    143 Oct 16 15:24 count.opc
+-rw-r--r-- 1 janwesh cs341-1G    832 Oct 16 15:21 count.s
+-rw-r--r-- 1 janwesh cs341-1G   1760 Oct 16 15:24 count.syms
+-rw-r--r-- 1 janwesh cs341-1G   2173 Oct 10 22:24 makefile
+-rw-r--r-- 1 janwesh cs341-1G 147915 Oct 10 22:24 mp2.pdf
+-rw-r--r-- 1 janwesh cs341-1G    395 Oct 10 22:24 printbinc.c
+-rw-r--r-- 1 janwesh cs341-1G    616 Oct 10 22:24 strcpyc.c
+-rw-r--r-- 1 janwesh cs341-1G    159 Oct 10 22:24 sum10c.c
+-rw-r--r-- 1 janwesh cs341-1G    426 Oct 10 22:24 sum10.s
+-rw-r--r-- 1 janwesh cs341-1G   4696 Oct 10 22:24 sum10.script_mod.txt
+lrwxrwxrwx 1 janwesh cs341-1G     10 Oct 16 15:24 syms -> count.syms
+drwxrwsr-x 2 janwesh cs341-1G   4096 Oct  3 23:02 warmup
+janwesh@itserver6:~/cs341/mp2$ logout
+Connection to users.cs.umb.edu closed.
+bash-3.2$ ssh tuser@172.16.121.128
+tuser@172.16.121.128's password: 
+Linux tutor-vserver 2.6.32-5-686 #1 SMP Fri Sep 9 20:51:05 UTC 2011 i686
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Mon Oct 16 15:00:38 2017 from 172.16.121.1
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ cd mp2
+]0;tuser@tutor-vserver: ~/mp2tuser@tutor-vserver:~/mp2$ ls
+countc.c    [0m[01;32mcount.lnx[0m  count.s               count.syms
+countc.opc  count.opc  count.script-console
+]0;tuser@tutor-vserver: ~/mp2tuser@tutor-vserver:~/mp2$ gdb count.lnx
+GNU gdb (GDB) 7.0.1-debian
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i486-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /home/tuser/mp2/count.lnx...done.
+(gdb) rem tar /dev/ttyS0
+Undefined remote command: "tar /dev/ttyS0".  Try "help remote".
+(gdb) tar rem /dev/ttyS0
+Remote debugging using /dev/ttyS0
+0x00100100 in ?? ()
+(gdb) set $eip=0x100100
+(gdb) i reg
+eax            0x1	1
+ecx            0x6967c	431740
+edx            0x0	0
+ebx            0x0	0
+esp            0x5788c	0x5788c
+ebp            0x57890	0x57890
+esi            0x13e10	81424
+edi            0x51ffc	335868
+eip            0x100100	0x100100
+eflags         0x206	[ PF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+startupc () at startup.c:4
+4	startup.c: No such file or directory.
+	in startup.c
+(gdb) i reg
+eax            0x0	0
+ecx            0x6967c	431740
+edx            0x100191	1048977
+ebx            0x0	0
+esp            0x3ffff0	0x3ffff0
+ebp            0x0	0x0
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100110	0x100110 <startupc>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) x/128i 0x100100
+0x100100:	mov    $0x3ffff0,%esp
+0x100105:	mov    $0x0,%ebp
+0x10010a:	call   0x100110 <startupc>
+0x10010f:	int3   
+0x100110 <startupc>:	push   %ebp
+0x100111 <startupc+1>:	mov    %esp,%ebp
+0x100113 <startupc+3>:	call   0x100236 <main+162>
+0x100118 <startupc+8>:	call   0x100248 <init_devio>
+0x10011d <startupc+13>:	call   0x100194 <main>
+0x100122 <startupc+18>:	leave  
+0x100123 <startupc+19>:	ret    
+0x100124:	inc    %ebp
+0x100125:	outsb  %ds:(%esi),(%dx)
+0x100126:	je     0x10018d
+0x100128:	jb     0x10014a
+0x10012a:	popa   
+
+0x10012b:	and    %dh,0x74(%ebx)
+0x10012e:	jb     0x100199 <main+5>
+0x100130:	outsb  %ds:(%esi),(%dx)
+
+0x100131:	addr16 and %ch,0x66(%bx)
+
+0x100135:	and    %ah,0x68(%ebx)
+0x100138:	popa   
+
+0x100139:	jb     0x10019c <main+8>
+---Type <return> to continue, or q <return> to quit---
+
+0x10013b:	arpl   %si,0x72(%ebp,%eiz,2)
+0x10013f:	jae    0x10017b
+0x100141:	or     (%eax),%al
+0x100143:	and    $0x6e450073,%eax
+0x100148:	je     0x1001af <main+27>
+0x10014a:	jb     0x10016c
+0x10014c:	popa   
+0x10014d:	and    %ah,0x68(%ebx)
+0x100150:	popa   
+0x100151:	jb     0x1001b4 <main+32>
+0x100153:	arpl   %si,0x72(%ebp,%eiz,2)
+0x100157:	and    %dh,0x20(%edi,%ebp,2)
+0x10015b:	arpl   %bp,0x75(%edi)
+0x10015e:	outsb  %ds:(%esi),(%dx)
+0x10015f:	je     0x10019b <main+7>
+0x100161:	or     (%eax),%al
+0x100163:	and    $0x540a0063,%eax
+0x100168:	push   $0x756e2065
+0x10016d:	insl   (%dx),%es:(%edi)
+0x10016e:	bound  %esp,0x72(%ebp)
+0x100171:	and    %ch,0x66(%edi)
+0x100174:	and    %ah,0x20732763
+0x10017a:	imul   $0x20656874,0x20(%esi),%ebp
+---Type <return> to continue, or q <return> to quit---
+0x100181:	jae    0x1001f7 <main+99>
+0x100183:	jb     0x1001ee <main+90>
+0x100185:	outsb  %ds:(%esi),(%dx)
+0x100186:	addr16 and %ah,(%di)
+0x100189:	jae    0x1001ab <main+23>
+0x10018b:	imul   $0xa6425,0x20(%ebx),%esi
+0x100192:	nop
+0x100193:	nop
+0x100194 <main>:	push   %ebp
+0x100195 <main+1>:	mov    %esp,%ebp
+0x100197 <main+3>:	sub    $0x68,%esp
+0x10019a <main+6>:	call   0x1007e0 <__main>
+0x10019f <main+11>:	push   $0x100124
+0x1001a4 <main+16>:	call   0x1007e8 <printf>
+0x1001a9 <main+21>:	add    $0x4,%esp
+0x1001ac <main+24>:	lea    -0x64(%ebp),%eax
+0x1001af <main+27>:	push   %eax
+0x1001b0 <main+28>:	push   $0x100143
+0x1001b5 <main+33>:	call   0x100810 <scanf>
+0x1001ba <main+38>:	add    $0x8,%esp
+0x1001bd <main+41>:	push   $0x100146
+0x1001c2 <main+46>:	call   0x1007e8 <printf>
+0x1001c7 <main+51>:	add    $0x4,%esp
+---Type <return> to continue, or q <return> to quit---
+0x1001ca <main+54>:	lea    -0x65(%ebp),%eax
+0x1001cd <main+57>:	push   %eax
+0x1001ce <main+58>:	push   $0x100163
+0x1001d3 <main+63>:	call   0x100810 <scanf>
+0x1001d8 <main+68>:	add    $0x8,%esp
+0x1001db <main+71>:	movsbl -0x65(%ebp),%eax
+0x1001df <main+75>:	push   %eax
+0x1001e0 <main+76>:	lea    -0x64(%ebp),%eax
+0x1001e3 <main+79>:	push   %eax
+0x1001e4 <main+80>:	call   0x100210 <main+124>
+0x1001e9 <main+85>:	add    $0x8,%esp
+0x1001ec <main+88>:	mov    %eax,%eax
+0x1001ee <main+90>:	push   %eax
+0x1001ef <main+91>:	lea    -0x64(%ebp),%eax
+0x1001f2 <main+94>:	push   %eax
+0x1001f3 <main+95>:	movsbl -0x65(%ebp),%eax
+0x1001f7 <main+99>:	push   %eax
+0x1001f8 <main+100>:	push   $0x100166
+0x1001fd <main+105>:	call   0x1007e8 <printf>
+0x100202 <main+110>:	add    $0x10,%esp
+0x100205 <main+113>:	xor    %eax,%eax
+0x100207 <main+115>:	jmp    0x10020c <main+120>
+0x100209 <main+117>:	nop
+---Type <return> to continue, or q <return> to quit---
+0x10020a <main+118>:	nop
+0x10020b <main+119>:	nop
+0x10020c <main+120>:	leave  
+0x10020d <main+121>:	ret    
+0x10020e <main+122>:	nop
+0x10020f <main+123>:	nop
+0x100210 <main+124>:	push   %ebp
+0x100211 <main+125>:	mov    0x8(%esp),%ecx
+0x100215 <main+129>:	mov    0xc(%esp),%edx
+0x100219 <main+133>:	mov    $0x0,%eax
+0x10021e <main+138>:	cmpb   $0x0,(%ecx)
+0x100221 <main+141>:	je     0x100230 <main+156>
+0x100223 <main+143>:	cmp    (%ecx),%dl
+0x100225 <main+145>:	jne    0x10022d <main+153>
+0x100227 <main+147>:	add    $0x1,%eax
+0x10022a <main+150>:	inc    %ecx
+0x10022b <main+151>:	jmp    0x10021e <main+138>
+0x10022d <main+153>:	inc    %ecx
+0x10022e <main+154>:	jmp    0x10021e <main+138>
+0x100230 <main+156>:	pop    %ebp
+0x100231 <main+157>:	ret    
+0x100232 <main+158>:	nop
+0x100233 <main+159>:	nop
+---Type <return> to continue, or q <return> to quit---
+0x100234 <main+160>:	int3   
+0x100235 <main+161>:	ret    
+0x100236 <main+162>:	xor    %eax,%eax
+0x100238 <main+164>:	mov    $0x101a8c,%edi
+0x10023d <main+169>:	mov    $0x101a9c,%ecx
+0x100242 <main+174>:	sub    %edi,%ecx
+0x100244 <main+176>:	cld    
+0x100245 <main+177>:	rep stos %al,%es:(%edi)
+0x100247 <main+179>:	ret    
+0x100248 <init_devio>:	push   %ebp
+0x100249 <init_devio+1>:	mov    %esp,%ebp
+0x10024b <init_devio+3>:	mov    0x55104,%eax
+0x100250 <init_devio+8>:	mov    %eax,0x101900
+(gdb) b *0x100227
+Breakpoint 1 at 0x100227: file countc.c, line 19.
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+warning: Source file is more recent than executable.
+19	}
+(gdb) i reg
+eax            0x0	0
+ecx            0x3fff80	4194176
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+19	}
+(gdb) i reg
+eax            0x1	1
+ecx            0x3fff83	4194179
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+19	}
+(gdb) i reg
+eax            0x2	2
+ecx            0x3fff84	4194180
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+19	}
+(gdb) i reg
+eax            0x3	3
+ecx            0x3fff87	4194183
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+19	}
+(gdb) i reg
+eax            0x4	4
+ecx            0x3fff88	4194184
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x00100227 in main () at countc.c:19
+19	}
+(gdb) i reg
+eax            0x5	5
+ecx            0x3fff89	4194185
+edx            0x61	97
+ebx            0x0	0
+esp            0x3fff6c	0x3fff6c
+ebp            0x3fffe4	0x3fffe4
+esi            0x13e10	81424
+edi            0x101a9c	1055388
+eip            0x100227	0x100227 <main+147>
+eflags         0x246	[ PF ZF IF ]
+cs             0x10	16
+ss             0x18	24
+ds             0x18	24
+es             0x18	24
+fs             0x18	24
+gs             0x18	24
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00000007 in ?? ()
+(gdb) quit
+A debugging session is active.
+
+	Inferior 1 [Remote target] will be killed.
+
+Quit anyway? (y or n) y
+]0;tuser@tutor-vserver: ~/mp2tuser@tutor-vserver:~/mp2$ logout
+Connection to 172.16.121.128 closed.
+bash-3.2$ exit
+exit
+
+Script done on Mon Oct 16 15:30:10 2017

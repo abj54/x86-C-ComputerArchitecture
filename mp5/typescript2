@@ -1,0 +1,1081 @@
+Script started on Tue 12 Dec 2017 03:45:34 PM EST
+tuser@tutor-vserver:~/mp5$ ssh janwesh@users.cs.umb.edu
+janwesh@users.cs.umb.edu's password: 
+Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.4.0-96-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+99 packages can be updated.
+0 updates are security updates.
+
+
+You have new mail.
+Last login: Tue Dec 12 15:44:51 2017 from 158.121.249.23
+janwesh@itserver6:~$ cd cs341/mp5
+janwesh@itserver6:~/cs341/mp5$ ls -al
+total 420
+drwxr-sr-x 2 janwesh cs341-1G   4096 Dec 12 15:44 .
+drwxrws--- 8 janwesh cs341-1G   4096 Dec 12 11:00 ..
+-rw-r--r-- 1 janwesh cs341-1G      0 Dec 12 11:31 a.out
+-rw-r--r-- 1 janwesh cs341-1G   7732 Dec 12 13:31 cmds.c
+-rw-r--r-- 1 janwesh cs341-1G   8681 Dec 12 15:42 cmds.opc
+-rw-r--r-- 1 janwesh cs341-1G   4028 Dec 12 15:44 comintspack.c
+-rw-r--r-- 1 janwesh cs341-1G    343 Dec 12 11:00 comintspack.h
+-rw-r--r-- 1 janwesh cs341-1G   5398 Dec 12 15:42 comintspack.opc
+-rw-r--r-- 1 janwesh cs341-1G    443 Dec 12 15:19 discussion.txt
+-rw-r--r-- 1 janwesh cs341-1G   3665 Dec 12 11:00 makefile
+-rw-r--r-- 1 janwesh cs341-1G 243525 Dec 12 11:00 mp5.pdf
+-rw-r--r-- 1 janwesh cs341-1G  12037 Dec 12 11:00 Rubric.docx
+-rw-r--r-- 1 janwesh cs341-1G   2374 Dec 12 11:00 slex.c
+-rw-r--r-- 1 janwesh cs341-1G   1859 Dec 12 11:00 slex.h
+-rw-r--r-- 1 janwesh cs341-1G   4445 Dec 12 15:42 slex.opc
+lrwxrwxrwx 1 janwesh cs341-1G     10 Dec 12 15:42 syms -> tutor.syms
+-rw-r--r-- 1 janwesh cs341-1G    440 Dec 12 15:35 test1_com1
+-rw-r--r-- 1 janwesh cs341-1G   1881 Dec 12 15:34 test1_com2
+-rw-r--r-- 1 janwesh cs341-1G    448 Dec 12 11:00 test_comintspack.c
+-rw-r--r-- 1 janwesh cs341-1G    905 Dec 12 11:00 test_tickpack.c
+-rw-r--r-- 1 janwesh cs341-1G   2427 Dec 12 11:00 tickpack.c
+-rw-r--r-- 1 janwesh cs341-1G    264 Dec 12 11:00 tickpack.h
+-rw-r--r-- 1 janwesh cs341-1G   2654 Dec 12 15:42 tickpack.opc
+-rw-r--r-- 1 janwesh cs341-1G   1924 Dec 12 11:00 tutor.c
+-rwxr-xr-x 1 janwesh cs341-1G  46049 Dec 12 15:42 tutor.lnx
+-rw-r--r-- 1 janwesh cs341-1G   4572 Dec 12 15:42 tutor.opc
+-rw-r--r-- 1 janwesh cs341-1G   3895 Dec 12 15:42 tutor.syms
+-rw-r--r-- 1 janwesh cs341-1G   1901 Dec 12 11:00 window1.txt
+-rw-r--r-- 1 janwesh cs341-1G    401 Dec 12 11:00 window2.txt
+janwesh@itserver6:~/cs341/mp5$ cat *.c
+/******************************************************************
+*
+*   file:     cmds.c
+*   bob wilson: changed the COM1 driver part of the assignment - 2/17/2008
+*   bob wilson:  added solution for mp5 - 11/27/2004
+*   author:   betty o'neil
+*   date:     dim dark past
+*
+*   semantic actions for commands called by tutor (cs241, hw2)
+*
+*   revisions:
+*      9/90  eb   cleanup, convert function declarations to ansi
+*      9/91  eb   changes so that this can be used for hw1
+*/
+
+/* the Makefile arranges that #include <..> searches in the right
+   places for these headers-- */
+#include <stdio.h>
+#include <slex.h>
+#ifdef SAPC
+#include <serial.h>
+#include "tickpack.h"
+#include "comintspack.h"
+#endif
+
+#define PROMPT "Prompt: \n\r"
+/*===================================================================*
+*
+*   Command table for tutor program - an array of structures of type cmd
+*   - for each command provide the token, the function to call when 
+*   that token is found, and the help message.
+*
+*   slex.h contains the typdef for struct cmd, and declares the 
+*   cmds array as extern to all the other parts of the program.
+*   Code in slex.c parses user input command line and calls the
+*   requested semantic action, passing a pointer to the cmd struct
+*   and any arguments the user may have entered.
+*
+*===================================================================*/
+#define USECS_PER_SEC 1000000
+#define MAXLINE 200
+
+PROTOTYPE int quit(Cmd *cp, char *arguments);
+PROTOTYPE int mem_display(Cmd *cp, char *arguments);
+PROTOTYPE int mem_set(Cmd *cp, char *arguments);
+PROTOTYPE int help(Cmd *cp, char *arguments);
+PROTOTYPE int timeon ( Cmd *cp, char *arguments);
+PROTOTYPE int timeoff ( Cmd *cp, char *arguments);
+PROTOTYPE int spi ( Cmd *cp, char *arguments);
+PROTOTYPE void process_input(char *buffer);
+PROTOTYPE void process_output(char *buffer);
+PROTOTYPE void tick_print(void);
+
+/* command table */
+
+Cmd cmds[] = {{"timeon", timeon, "Timer On: timeon <interval in secs>"},
+             {"timeoff", timeoff, "Timer Off: timeoff "},
+             {"spi", spi, "Serial Port Interrupts: spi <on/off>"},
+             {"md",  mem_display, "Memory display: md <addr>"},
+             {"ms", mem_set, "Memory set: ms <addr>"},
+             {"h", help, "Help: h <cmd> or h (for all)"},
+             {"q",  quit, "Quit" },
+             {NULL, NULL,  NULL}};   /* null cmd to flag end of table */
+
+/*===================================================================*
+*		command			routines		     
+*
+*   Each command routine is called with 2 args, the remaining 
+*   part of the line to parse and a pointer to the struct cmd for this 
+*   command. Each returns 0 for continue or 1 for all-done.  
+*
+*===================================================================*/
+
+static int timer_on;   		/* flag for timer int on */
+static int ticks;               /* tick count to display */
+
+static int port_on;		/* port ints are enabled */
+static char buffer[MAXLINE];
+/*===================================================================
+*
+*     timeon: timer interrupts every interval seconds and displays count
+*
+*====================================================================*/
+
+int timeon (Cmd *cp, char *arguments)
+{
+  unsigned int interval;
+
+  if ((sscanf(arguments, "%d", &interval))!=1) {
+    printf ("Proper usage : %s\n", cp->help);
+    return 0; 
+  }
+  
+  init_ticks(interval * USECS_PER_SEC, &tick_print);
+  timer_on = 1;
+  ticks = 0;
+  printf("%s", "timer on\n");
+  return 0;
+}
+
+void tick_print(void)
+{
+  ticks++;
+  printf("(%d)\n", ticks);
+}
+
+/*=====================================================================
+*
+*     timeoff: shut down timer and stop printing of count
+*
+*======================================================================*/
+
+int timeoff (Cmd *cp, char *arguments)
+{
+  shutdown_ticks();
+  timer_on = 0;
+  ticks = 0;
+  printf("%s", "timer off\n");
+  return 0;
+}
+
+/*=====================================================================
+*
+*     spi: set serial port interrupts either on or off
+*
+*======================================================================*/
+
+int spi (Cmd *cp, char *arguments)
+{
+   char on_off[MAXLINE];
+
+   if (sscanf(arguments,"%s", on_off) != 1){
+     printf ("Proper Usage : %s\n", cp->help);
+     return 0; 
+   }
+
+   if(!strcmp(on_off,"on")) {   /* turning on */ 
+     port_on = 1;
+     /* send prompt to user on COM1 then alternately 
+      * print user entries to COM2 and prompts to COM1 
+      * via interrupts and the callback functions below 
+      */
+
+     cli();       /* see comments in comintpack.c */
+     init_comints(TRANSMIT, process_output, PROMPT, strlen(PROMPT));
+     sti();
+     printf("comints for COM1 on\n");
+   } 
+   else {                       /* turning off */
+     cli();      /* see comments in comintspack.c */ 
+     shutdown_comints();
+     sti();
+     port_on = 0;
+     printf("comints for COM1 off\n");
+   }
+   return 0;
+}
+
+/* interupts are disabled during execution of these two callback functions */
+
+void process_output(char *prompt)
+{
+     /* you write the code here */
+   shutdown_comints();
+   init_comints(RECEIVE,process_input,buffer,strlen(buffer));	
+}
+
+void process_input(char *received)
+{
+     /* you write the code here */
+   printf("%s\n",buffer);
+   shutdown_comints();
+   init_comints(TRANSMIT,process_output,PROMPT,strlen(PROMPT));
+}
+/*===================================================================*
+*		command			routines		     
+*
+*   Each command routine is called with 2 args, the remaining 
+*   part of the line to parse and a pointer to the struct cmd for this 
+*   command. Each returns 0 for continue or 1 for all-done.  
+*
+*===================================================================*/
+
+int quit(Cmd *cp, char *arguments)
+{
+  if (timer_on) {
+     shutdown_ticks();
+     timer_on = 0;
+  }
+  if (port_on) {
+     cli();      /* see comments in comintspack.c */ 
+     shutdown_comints();
+     sti();
+     port_on = 0;
+  }
+  return 1;			/* all done flag */
+}
+
+/*===================================================================*
+*
+*   mem_display: display contents of a single byte in hex
+*
+*/
+
+int mem_display(Cmd *cp, char *arguments)
+{
+  int arg=0;
+  unsigned char *memloc;  /* note ptr to *byte* (could use char *) */
+  
+  if (sscanf(arguments, "%x", &arg)==1) {
+    memloc = (unsigned char *)arg;
+    printf("%x : ", arg);
+    printf("%2x ", *memloc);
+    printf("\n");
+    return 0;
+  } else {
+    printf("%s\n", cp->help);
+    return 0;
+  }
+}
+
+/********************************************************/
+
+/* mem_set : ms <hexaddress> <new_val> 
+ *     stores byte new_val at address, both are given 
+ *     in 'arguments'
+*/
+
+int mem_set(Cmd *cp, char *arguments) 
+{
+  int address, new_val;
+  unsigned char *ptr;
+
+  if (sscanf(arguments, "%x %x", &address, &new_val)==2) {
+    ptr = (unsigned char *)address;
+    *ptr = new_val;
+    return 0;
+  } else {
+    printf("%s\n", cp->help);
+    return 0;
+  }
+}
+
+/****************************************************/
+
+/* help : display a help message of the 'arguments'
+ *      command, or list all commands if no arg.
+*/
+
+int help(Cmd *cp, char *arguments) 
+{
+  int stat, cmd_num, pos;
+
+  /* reuse code that matches command token-- */
+  stat = slex(arguments, cmds, &cmd_num, &pos);
+  if (stat < 0) {		/* if no command token found in args */
+    printf("     cmd    help message\n");
+    printf("     ---    ------------\n");
+    for (cp = cmds; cp->cmdtoken; cp++)   /* show all commands */
+      printf("%8s    %s\n",cp->cmdtoken, cp->help);
+  } else {			/* found command token, just print that one */
+    printf("%s\n", cmds[cmd_num].help);
+    return 0;
+  }
+  return 0;
+}
+/* comintspack.c */
+/* package for using com port interrupts */
+
+#include <stdio.h>
+#include <serial.h>
+#include <pic.h>
+#include <cpu.h>
+#include "comintspack.h"
+
+/* ascii characters used */
+#define CR '\x0d'
+#define LF '\x0a'
+
+void irq4inthandc (void);
+static void (*this_callback)(char *);
+static char *this_buffer;
+static int this_size;
+static int this_mode;
+static int cursor;
+
+/* This assembler routine is supplied in the SAPC library */
+/* in irq4.s, calls irq4inthandc */
+extern IntHandler irq4inthand;
+
+void init_comints (int mode, void (*callback)(char *), char *buffer, int size)
+{
+   /* This function expects to be called with interrupts disabled.
+    * It may be called by the background between cli() and sti() calls
+    * or by an interrupt service routine (ISR) where interrupts are off.
+    * That is why this code does not call cli() or sti() itself.
+    */
+
+   /* Save the inputs statically for use in the ISR */
+   this_callback = callback;
+   this_buffer = buffer;
+   this_size = size;
+   this_mode = mode;
+   cursor = 0;
+   
+   /* COM1 uses IRQ 4 */
+   /* First drain any input out of the COM1's receiver--a full FIFO */
+   /* (multichar buffer in UART) causes this UART to stop interrupting!  */
+   while (inpt(COM1_BASE+UART_LSR)&UART_LSR_DR)/* while one there */
+      inpt(COM1_BASE+UART_RX); /* pull another char out of UART */
+
+   /* You fill in: */
+   /* arm the interrupt using irq4inthand,
+   i.e., put irq4inthand in the right place in the IDT */
+  set_intr_gate(COM1_IRQ + IRQ_TO_INT_N_SHIFT,&irq4inthand ); 
+
+   /* enable interrupts for COM1's IRQ in the PIC */
+     pic_enable_irq(COM1_IRQ);
+   if (mode == RECEIVE) {
+     /* turn on receiver interrupts in the UART's IER */
+  /*   status = inpt(COM1_BASE + UART_IER);
+   //  status |= UART_IER_RDI;
+   //  outpt(COM1_BASE + UART_IER, status); */ 
+     outpt(COM1_BASE+UART_IER,UART_IER_RDI);
+   }
+   else {
+     /* turn on transmitter interrupts in the UART's IER */
+   /* //  status = inpt(COM1_BASE + UART_IER);
+//     status |= UART_IER_THRI;
+  //   outpt(COM1_BASE + UART_IER, status);  */
+ outpt(COM1_BASE+UART_IER,UART_IER_THRI);
+   }
+}
+
+void shutdown_comints ()
+{
+  /* This function expects to be called with interrupts disabled.
+   * It may be called by the background between cli() and sti() calls
+   * or by an interrupt service routine (ISR) where interrupts are off.
+   * That is why this code does not call cli() or sti() itself.
+   */
+
+  /* You fill in: */
+  /* disable COM1's IRQ in the PIC */
+  pic_disable_irq(COM1_IRQ);
+
+  /* turn off transmitter and receiver interrupts in COM1's IER */
+ /* //unsigned char status;
+//  status = inpt(COM1_BASE+UART_IER);
+//  status &= UART_IER_RDI;
+//  outpt(COM1_BASE + UART_IER, status);
+
+  //status = inpt(COM1_BASE + UART_IER);
+ // status &= UART_IER_THRI;*/
+  outpt(COM1_BASE + UART_IER, 0);
+}
+
+/* this is called from irq4inthand, the assembler interrupt envelope */
+/* that routine saves the C compiler scratch registers */
+/* calls this function to process the interrupt */
+/* restores the C compiler scratch registers and executes iret */
+void irq4inthandc(void)
+{
+  char c;
+  pic_end_int();                      /* notify pic that its part is done */
+   
+  if (this_mode == RECEIVE) {         /* receive interrupt */
+    /* you write the code here */
+
+c = inpt(COM1_BASE + UART_RX);
+this_buffer[cursor++] = c;
+/*outpt(COM1_BASE+UART_TX,c);*/
+if(c == CR){
+  /* printf("-->%s\n",this_buffer);*/
+/*        outpt(COM1_BASE+UART_TX,'\n');*/
+        this_buffer[cursor]= '\0';	
+	cursor = 0;
+
+	this_callback (this_buffer);
+        outpt(COM1_BASE+UART_TX,'\n');
+}
+outpt(COM1_BASE+UART_TX,c);
+}
+  else {                            /* transmit interrupt */
+    /* you write the code here */
+c =  this_buffer[cursor++];
+outpt(COM1_BASE+UART_IER,0);
+outpt(COM1_BASE+UART_IER, UART_IER_THRI); /* kickstart TX interrupt */    
+if(c != '\0' ){
+   outpt(COM1_BASE + UART_TX,c);	}
+else {
+   outpt(COM1_BASE + UART_TX, '\n'); /*}*/
+   cursor = 0;
+  
+   this_callback(this_buffer);
+} }
+} /*200920*/
+/******************************************************************
+*
+*   file:   slex.c
+*   author: betty o'neil
+*   date:   ?
+*
+*   simple lexical analyzer, front part of a parser                   
+*   --compare to UNIX tool "lex", general lexical analyzer            
+*   gets a (space-delimited) token from linebuf and tries to match    
+*   it to one of the cmdtokens in the provided cmdtable             
+*
+*   accepts:       
+*         linebuf--string to get token from                         
+*         cmdtable--cmdtable to use                                 
+*   returns:                                                          
+*         *cnum_ptr--command # (offset in cmdtable) or -1 if no match
+*         *pos_ptr--new place in linebuf after token match          
+*
+*   improvements needed:
+*         make token matching case independent
+*         skip whitespace, not just blanks
+*
+*   revisions: 
+*     9/90 cleanup, convert function headers to ansi form
+*
+*/
+
+#include <stdio.h>
+#include "slex.h"		/* for definition of type cmd */
+
+int slex(char *linebuf,    /* string from user */
+         Cmd cmdtable[],   /* cmd table to use */
+         int *cnum_ptr,    /* returned command number */
+         int *pos_ptr      /* returned new place in linebuf */
+    ) 
+{
+  int i = 0;
+  char token[MAXTOKENLEN];
+  int newpos;
+
+  if (gettoken(linebuf,token,&newpos)<0) /* get token from linebuf */
+    return -1;			/* couldn't find token */
+
+  while ((cmdtable[i].cmdtoken != NULL)) {
+    if (strcmp(cmdtable[i].cmdtoken,token)==0) {
+	*cnum_ptr = i;		/* success--return command # */
+	*pos_ptr = newpos;	/* and where we got to in linebuf */
+	return 0;
+    }
+    else
+      i++;			/* keep scanning table */
+  }
+  return -1;			/* no match */
+}
+
+/******************************************************************
+ * get one space-delimited token from string in linebuf, also return 
+ * new position in string 
+ */
+int gettoken(char *linebuf, char *token, int *pos_ptr)
+{
+  int i = 0;
+  int j = 0;
+
+  while (linebuf[i]==' ')
+    i++;			/* skip blanks */
+  while (linebuf[i]!=' '&&linebuf[i]!='\0')
+    token[j++] = linebuf[i++];	/* copy chars to token */
+  if (j==0)
+    return -1;			/* nothing there */
+  else
+    {
+      token[j] = '\0';		/* null-terminate token */
+      *pos_ptr = i;		/* return place in linebuf we got to */
+      return 0;			/* success */
+    }
+}
+/* compile with "gcc -I $pcinc ..." to make IntHandler def available */
+#include <stdio.h>
+#include "comintspack.h"
+
+#define DEV COM1		/* test com port DEV */
+
+int main(void)
+{
+  init_comints(DEV, 1);
+  printf("Waiting for interrupts from COM1 .... \n");
+
+  /* delay loop while things happen at interrupt level */
+  getchar();
+  /* when user types anything on COM2, delay is over */
+
+  printf("All done\n");
+  shutdown_comints(DEV);
+  return 0;
+}
+
+/* compile with "gcc -I $pcinc ..." to make IntHandler def available */
+#include <stdio.h>
+#include "tickpack.h"
+
+IntHandler printstar;
+void fake_init_ticks(int interval, IntHandler *app_tick_callback);
+/* We want a delay of over 10 secs, to see at least 2 stars */
+/* Assuming about 4 instructions/loop, this will be about 12 secs */
+#define CPU_MHZ 400000000
+#define LOOPCOUNT (3*CPU_MHZ)
+
+int main(void)
+{
+  int i;
+
+  fake_init_ticks(5000000,&printstar); /* print one star via callback */
+
+  init_ticks(5000000,&printstar); /* print star every 5 secs */
+  for (i=0;i<LOOPCOUNT;i++)
+    ;
+  shutdown_ticks();
+  return 0;
+}
+
+void printstar()
+{
+  putchar('*');
+}
+
+/* show a call of callback */
+void fake_init_ticks(int interval, IntHandler *app_tick_callback)
+{
+  IntHandler *cb = app_tick_callback; /* show we can save it */
+
+  printf("in fake init_ticks, calling callback only once...\n");
+  (*cb)();
+}
+/* tickpack.c 
+ * Bob Wilson
+ * 05/11/2003
+ * As suggested in mp5 assignment, much code borrowed from mp4 timepack_sapc.c
+*/
+#include <tickpack.h>
+#include <timer.h>
+#include <pic.h>
+#include <cpu.h>
+
+extern IntHandler irq0inthand;
+
+#define MICROSECS_PER_SEC 1000000
+#define TICKS_PER_SEC  18.2
+
+/* internal function prototypes */
+void set_timer_count(int);
+void smalldelay(void);
+void irq0inthandc(void);
+
+static int tickcount;
+static int end_count;
+static IntHandler *callback;
+
+void init_ticks(int interval, IntHandler *app_tick_callback)
+{
+  tickcount = 0;
+  end_count = interval * TICKS_PER_SEC / MICROSECS_PER_SEC;
+  callback = app_tick_callback;
+#ifdef DEBUG
+  printf("Disabling interrupts in CPU while setting them up\n");
+#endif
+  cli();
+#ifdef DEBUG  
+  printf("Setting interrupt gate for timer, irq 0\n");
+#endif
+  /* irq 0 maps to slot n = 0x20 in IDT for linux setup */
+  set_intr_gate(TIMER0_IRQ+IRQ_TO_INT_N_SHIFT, &irq0inthand);
+#ifdef DEBUG
+  printf("Commanding PIC to interrupt CPU for irq 0\n");
+#endif
+  pic_enable_irq(TIMER0_IRQ);
+#ifdef DEBUG
+  printf("Commanding timer to generate a pulse train using max count\n");
+#endif
+  set_timer_count(0);   
+#ifdef DEBUG
+  printf("Enabling interrupts in CPU\n");
+#endif
+  sti();
+}
+void shutdown_ticks()
+{
+  cli();
+#ifdef DEBUG
+  printf("Commanding PIC to shut off irq 0 to CPU\n");
+#endif
+  pic_disable_irq(TIMER0_IRQ);  /* disallow irq 0 ints to get to CPU */
+  sti();
+}
+
+/* about 10 us on a SAPC (400Mhz Pentium) */
+void smalldelay(void)
+{
+  int i;
+    
+  for (i=0;i<1000;i++)
+     ;
+}
+
+/* Set up timer to count down from given count, then send a tick interrupt, */
+/* over and over. A count of 0 sets max count, 65536 = 2**16 */
+void set_timer_count(int count)
+{
+  outpt(TIMER_CNTRL_PORT, TIMER0|TIMER_SET_ALL|TIMER_MODE_RATEGEN);
+  outpt(TIMER0_COUNT_PORT,count&0xff); /* set LSB here */
+  outpt(TIMER0_COUNT_PORT,count>>8); /* and MSB here */
+  smalldelay();                 /* give the timer a moment to init. */
+}
+
+/* timer interrupt handler */
+void irq0inthandc(void)
+{
+  pic_end_int();                /* notify PIC that its part is done */
+  tickcount++;                  /* count the tick in global var */
+  if (tickcount >= end_count) {
+    tickcount = 0;              /* reset tickcount */
+    (*callback) ();		/* call application callback function */
+  }  
+}
+
+/******************************************************************
+*
+*   file:     tutor.c
+*   author:   eb
+*   date:     September, 1990
+*
+*   Driver for a "tutor" program to mimic and extend the MECB ROM TUTOR.
+* 
+*   built from betty o'neil's previous version
+*
+*   revisions:
+*   Jan '96: changed prompt to PC-tutor, now mimics floppy-based Tutor
+*/
+
+#include <stdio.h>
+#include "slex.h" 
+
+#ifdef SAPC
+#define PROMPT "PC-tutor> "
+#else
+#define PROMPT "UNIX-tutor> "
+#endif
+int main(void);
+
+int main()
+{
+  int done = 0;
+  int cnum,linepos;
+  char linebuf[LINELEN];
+  Cmd *cp;
+
+  printf("    cmd     help message\n");
+  for(cp = cmds; cp->cmdtoken; cp++) 
+      printf("%8s    %s\n", cp->cmdtoken, cp->help);
+
+  while (!done) {
+    /* get cmd token from user by parsing first part of line in linebuf-- */
+    getcmd(linebuf,&cnum,&linepos);
+    /* call implementation routine for matched cmd-- */
+    /* (remaining part of line to parse starts at linebuf+linepos) */
+    done = cmds[cnum].cmdfn(&cmds[cnum], linebuf+linepos); 
+  }
+  return 0;
+}
+
+/***********************************************************************
+*
+*  getcmd 
+*
+* Better than scanf--read whole line in, parse resulting string.
+* Uses slex package to match cmd token in first part of linebuf 
+* and return command # and where to continue parsing.
+* Getcmd loops until user provides proper command, so no error return.
+*/
+void getcmd(char *linebuf, 
+             int *cnum_ptr,   /* returned command number */
+             int *pos_ptr     /* position in linebuf (after cmd token) */
+           )
+{
+  int done = 0;
+
+  while (!done) {
+     printf( PROMPT );
+     gets(linebuf);		/* read line from user, null terminate */
+     /* match cmd token to get cnum--call slex package to do lookup-- */
+     if (slex( linebuf, cmds, cnum_ptr, pos_ptr)==0) 
+         done = 1;	/* success in matching cmd */
+     else
+         printf(" No such command\n");
+  }
+}
+janwesh@itserver6:~/cs341/mp5$ cat discusstion.txt
+cat: discusstion.txt: No such file or directory
+janwesh@itserver6:~/cs341/mp5$ cat *.txt
+Anwesh Joshi
+discussion.txt
+
+After writing my code, I had a bunch of errors that I kept getting which I 
+debugged using various printf statements. Similarly I also got errors 
+when I didnot kick start the Transimtter Interrupt everytime. To test it,
+I used various conditions that included different statements of different 
+lengths. Similarly, I also checked how my buffer would react in different
+situations by printing it in various cases.
+u17(1)%	make tutor.lnx
+ make: `tutor.lnx' is up to date.
+u17(2)%	mtip -f tutor.lnx
+ For command help, type ~?
+For help on args, rerun without args
+Code starts at 0x100100
+Using board # 1 
+ 
+
+Tutor> ~resetting board !
+Please type <CR> to confirm console setting: 
+Setting console dev to COM2Console: colour EGA+ 80x25
+COM1 at 0x03f8 (irq = 4) is a 16550A
+COM2 at 0x02f8 (irq = 3) is a 16550A
+
+                 Welcome to UMB Tutor for the PC
+   UMB Tutor is a 32-bit protected-mode PC debugger/downloader,
+       based on Linux, UMB Tutor for m68k, and remote gdb.
+UMB Tutor is free software and you are welcome to distribute copies
+of it under certain conditions.  There is no warranty for this program.
+The copyright and warranty provisions follow the Gnu general public
+license, available for view in gdb and elsewhere.  Full sources available.
+--bugs, suggestions, questions to eoneil@cs.umb.edu
+
+Exception 3 at EIP=000578f3: Breakpoint
+Tutor> ~downloading tutor.lnx
+...........Done.
+ 
+Download done, setting EIP to 100100.
+Tutor> go 100100
+
+    cmd     help message
+  timeon    Timer On: timeon <interval in secs>
+ timeoff    Timer Off: timeoff 
+     spi    Serial Port Interrupts: spi <on/off>
+      md    Memory display: md <addr>
+      ms    Memory set: ms <addr>
+       h    Help: h <cmd> or h (for all)
+       q    Quit
+PC-tutor> spi on
+comints for COM1 on
+PC-tutor> 
+ now is time
+ see me type data in
+ PC-tutor> timeon 5               NOTE: I can still enter a PC-tutor cmd
+timer on
+PC-tutor> (1)			 Note: Timer is operating independently
+more data^M^M			 of the COM1 port each using interrupts
+(2)
+(3)
+(4)
+more
+ (5)
+more
+ more
+ (6)
+(7)
+timeoff				 Note: another PC-tutor command
+timer off
+PC-tutor> more in
+ and more
+ spi off
+comints for COM1 off
+PC-tutor> q
+Exception 3 at EIP=00100110: Breakpoint
+Tutor> ~q 
+Quit handler: 
+u17(1)% mtip -l /dev/ttyS0
+
+For command help, type ~?
+For help on args, rerun without args
+Using board # -1 
+ 
+Prompt: 
+
+
+now is time
+Prompt: 
+
+
+see me type data in
+Prompt: 
+
+
+more data
+Prompt: 
+
+
+more
+Prompt: 
+
+
+more
+Prompt: 
+
+
+more
+Prompt: 
+
+
+more in
+Prompt: 
+
+
+and more
+Prompt: 
+
+
+~q 
+Quit handler: 
+killing process 12525 Leaving board #-1
+u17(2)% 
+
+janwesh@itserver6:~/cs341/mp5$ cat test1_com1
+Script started on Tue 12 Dec 2017 03:33:28 PM EST
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ mtip -l /dev/ttyS0
+For command help, type ~?
+For help on args, rerun without args
+Using board # -1 
+Prompt: 
+
+anwesh
+Prompt: 
+
+watch
+Prompt: 
+
+easy
+Prompt: 
+
+~q 
+Quit handler: 
+killing process 1953 Leaving board #-1
+]0;tuser@tutor-vserver: ~tuser@tutor-vserver:~$ exit
+exit
+
+Script done on Tue 12 Dec 2017 03:34:14 PM EST
+janwesh@itserver6:~/cs341/mp5$ cat test1_cp[Kom2
+Script started on Tue 12 Dec 2017 03:32:53 PM EST
+tuser@tutor-vserver:~/mp5$ mtip -f tutor.lnx
+For command help, type ~?
+For help on args, rerun without args
+Code starts at 0x100100
+Using board # 1 
+Please type <CR> to confirm console setting: 
+Setting console dev to COM2Console: colour EGA+ 80x25
+COM1 at 0x03f8 (irq = 4) is a 16550A
+COM2 at 0x02f8 (irq = 3) is a 16550A
+
+                 Welcome to UMB Tutor for the PC
+   UMB Tutor is a 32-bit protected-mode PC debugger/downloader,
+       based on Linux, UMB Tutor for m68k, and remote gdb.
+UMB Tutor is free software and you are welcome to distribute copies
+of it under certain conditions.  There is no warranty for this program.
+The copyright and warranty provisions follow the Gnu general public
+license, available for view in gdb and elsewhere.  Full sources available.
+--bugs, suggestions, questions to eoneil@cs.umb.edu
+
+Exception 3 at EIP=00057a9b: Breakpoint
+Tutor> go 100100
+Exception 13 at EIP=0010010c: General protection violation
+Tutor> ~downloading tutor.lnx
+
+...........Done.
+
+Download done, setting EIP to 100100.
+Tutor> go 100100
+    cmd     help message
+  timeon    Timer On: timeon <interval in secs>
+ timeoff    Timer Off: timeoff 
+     spi    Serial Port Interrupts: spi <on/off>
+      md    Memory display: md <addr>
+      ms    Memory set: ms <addr>
+       h    Help: h <cmd> or h (for all)
+       q    Quit
+PC-tutor> spi on
+TRASNMIT:::Prompt: 
+comints for COM1 on
+PC-tutor> Receiver:::
+anweshanwesh
+TRASNMIT:::Prompt: 
+Receiver:::
+watchwatch
+TRASNMIT:::Prompt: 
+Receiver:::
+easyeasy
+TRASNMIT:::Prompt: 
+spi off
+comints for COM1 off
+PC-tutor> q
+Exception 3 at EIP=00100110: Breakpoint
+Tutor> ~q 
+Quit handler: 
+killing process 1934 Leaving board #1
+tuser@tutor-vserver:~/mp5$ exit
+exit
+
+Script done on Tue 12 Dec 2017 03:34:22 PM EST
+janwesh@itserver6:~/cs341/mp5$ ssh ulab
+janwesh@ulab's password: 
+Last login: Tue Dec 12 15:42:24 2017 from itserver6.cs.um
+Block limit reached on /home/jorge
+Block limit reached on /home/rolandg
+Block limit reached on /home/janwesh
+cdSun Microsystems Inc. SunOS 5.8       Generic 64-bit  February 2000
+
+ Welcome to blade57.cs.umb.edu, a SunBlade 100 (uIIe-S128)
+
+                    Authorized users only.
+
+You have new mail.
+ csblade57(1)% cd cs341/mp5
+blade57(2)% make clean
+rm -f *.o *.opc *.syms *.usyms *.lnx tutor core syms usyms
+blade57(3)% ls
+Rubric.docx         discussion.txt      test1_com1          tickpack.h
+a.out               makefile            test1_com2          tutor.c
+cmds.c              mp5.pdf             test_comintspack.c  window1.txt
+comintspack.c       slex.c              test_tickpack.c     window2.txt
+comintspack.h       slex.h              tickpack.c
+blade57(4)% make tutor.lnx
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o cmds.opc cmds.c
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o /home/janwesh/cs341/mp5/tutor.opc /home/janwesh/cs341/mp5/tutor.c
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o /home/janwesh/cs341/mp5/slex.opc /home/janwesh/cs341/mp5/slex.c
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o tickpack.opc tickpack.c
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o comintspack.opc comintspack.c
+/groups/ulab/bin/i386-ld -N -Ttext 1000e0 -o tutor.lnx \
+        /groups/ulab/pcdev/lib/startup0.opc /groups/ulab/pcdev/lib/startup.opc \
+        /home/janwesh/cs341/mp5/tutor.opc /home/janwesh/cs341/mp5/slex.opc tickpack.opc comintspack.opc cmds.opc /groups/ulab/pcdev/lib/libc.a
+rm -f syms;/groups/ulab/bin/i386-nm -n tutor.lnx>tutor.syms;ln -s tutor.syms syms
+blade57(5)% make
+/groups/ulab/bin/i386-gcc -g -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-uninitialized -Wshadow -ansi -D__USE_FIXED_PROTOTYPES__ -I/home/janwesh/cs341/mp5 -I/groups/ulab/pcdev/include -c -o test_tickpack.opc test_tickpack.c
+/groups/ulab/bin/i386-ld -N -Ttext 1000e0 -o test_tickpack.lnx \
+        /groups/ulab/pcdev/lib/startup0.opc /groups/ulab/pcdev/lib/startup.opc \
+        test_tickpack.opc tickpack.opc /groups/ulab/pcdev/lib/libc.a
+rm -f syms;/groups/ulab/bin/i386-nm -n test_tickpack.lnx>test_tickpack.syms; \
+        ln -s test_tickpack.syms syms
+blade57(6)% ls
+Rubric.docx         makefile            test_comintspack.c  tutor.c
+a.out               mp5.pdf             test_tickpack.c     tutor.lnx
+cmds.c              slex.c              test_tickpack.lnx   tutor.opc
+cmds.opc            slex.h              test_tickpack.opc   tutor.syms
+comintspack.c       slex.opc            test_tickpack.syms  window1.txt
+comintspack.h       syms                tickpack.c          window2.txt
+comintspack.opc     test1_com1          tickpack.h
+discussion.txt      test1_com2          tickpack.opc
+blade57(7)% logout
+Connection to ulab closed.
+janwesh@itserver6:~/cs341/mp5$ logout
+Connection to users.cs.umb.edu closed.
+tuser@tutor-vserver:~/mp5$ scp janwesh@users.cs.umb.edu:cs341/mp5/tutor.* .
+janwesh@users.cs.umb.edu's password: 
+tutor.c                                         0%    0     0.0KB/s   --:-- ETAtutor.c                                       100% 1924     1.9KB/s   00:00    
+tutor.lnx                                       0%    0     0.0KB/s   --:-- ETAtutor.lnx                                     100%   45KB  44.9KB/s   00:00    
+tutor.opc                                       0%    0     0.0KB/s   --:-- ETAtutor.opc                                     100% 4572     4.5KB/s   00:00    
+tutor.syms                                      0%    0     0.0KB/s   --:-- ETAtutor.syms                                    100% 3895     3.8KB/s   00:00    
+tuser@tutor-vserver:~/mp5$ mtip -f tutor.lnx
+For command help, type ~?
+For help on args, rerun without args
+Code starts at 0x100100
+Using board # 1 
+Please type <CR> to confirm console setting: 
+Setting console dev to COM2Console: colour EGA+ 80x25
+COM1 at 0x03f8 (irq = 4) is a 16550A
+COM2 at 0x02f8 (irq = 3) is a 16550A
+
+                 Welcome to UMB Tutor for the PC
+   UMB Tutor is a 32-bit protected-mode PC debugger/downloader,
+       based on Linux, UMB Tutor for m68k, and remote gdb.
+UMB Tutor is free software and you are welcome to distribute copies
+of it under certain conditions.  There is no warranty for this program.
+The copyright and warranty provisions follow the Gnu general public
+license, available for view in gdb and elsewhere.  Full sources available.
+--bugs, suggestions, questions to eoneil@cs.umb.edu
+
+Exception 3 at EIP=00057a9b: Breakpoint
+Tutor> ~downloading tutor.lnx
+
+...........Done.
+
+Download done, setting EIP to 100100.
+Tutor> go 100100
+    cmd     help message
+  timeon    Timer On: timeon <interval in secs>
+ timeoff    Timer Off: timeoff 
+     spi    Serial Port Interrupts: spi <on/off>
+      md    Memory display: md <addr>
+      ms    Memory set: ms <addr>
+       h    Help: h <cmd> or h (for all)
+       q    Quit
+PC-tutor> spi on
+comints for COM1 on
+PC-tutor> now is time
+see me type
+data
+in
+more
+more
+timeon
+Proper usage : Timer On: timeon <interval in secs>
+PC-tutor> spi off
+comints for COM1 off
+PC-tutor> spi on
+comints for COM1 on
+PC-tutor> again
+lets try
+timeon 5
+timer on
+PC-tutor> (1)
+(2)
+more
+more
+(3)
+(4)
+(5)
+spi
+(6)
+spi off
+comints for COM1 off
+PC-tutor> q
+Exception 3 at EIP=00100110: Breakpoint
+Tutor> ~q 
+Quit handler: 
+killing process 2233 Leaving board #1
+tuser@tutor-vserver:~/mp5$ exit
+exit
+
+Script done on Tue 12 Dec 2017 03:50:24 PM EST
